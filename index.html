@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ms"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LIGHTNING TEACHER – THUNDER LOCK</title>
+<style>
+:root{--c:#22d3ee;--p:#a855f7;--y:#facc15;--pv:84px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;background:#050818;color:#fff;font:600 16px system-ui,sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+#fx{position:fixed;inset:0;width:100%;height:100%}
+#app{position:fixed;inset:0}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));text-align:center;overflow:auto}
+.screen.on{display:flex}
+h1{font-size:clamp(26px,8vw,64px);margin:0;letter-spacing:2px;background:linear-gradient(90deg,#fff,var(--c),var(--p));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px var(--c))}
+h2{margin:4px 0}
+.btn{min-height:46px;padding:8px 20px;border:2px solid var(--c);border-radius:14px;background:rgba(10,20,60,.75);color:#fff;font:700 clamp(14px,3.6vw,19px) system-ui;box-shadow:0 0 14px var(--c),inset 0 0 10px rgba(34,211,238,.3);cursor:pointer}
+.btn:disabled{opacity:.35}.btn.y{border-color:var(--y);box-shadow:0 0 14px var(--y)}.btn.sm{min-height:40px;padding:4px 12px}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.col{display:flex;flex-direction:column;gap:10px;width:min(420px,100%)}
+.panel{background:rgba(10,15,50,.78);border:1px solid var(--c);border-radius:14px;padding:10px 14px;box-shadow:0 0 18px rgba(34,211,238,.35);max-width:780px;width:100%}
+.tip,.cs,.gs,.md{font-size:14px;color:#a5f3fc}.tip{color:var(--y);min-height:18px}
+#game{justify-content:flex-start;align-items:stretch;overflow:hidden}
+#hud{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center}
+.chip{background:rgba(10,15,50,.8);border:1px solid var(--c);border-radius:20px;padding:4px 10px;font-size:clamp(13px,3.4vw,18px)}
+#qt{font-size:clamp(16px,4.2vw,28px);margin:0 auto}
+#field{flex:1;min-height:0;position:relative}
+#cards{position:absolute;inset:0;display:grid;gap:10px;grid-template-rows:repeat(3,1fr)}
+@media(min-aspect-ratio:1/1){#cards{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr}}
+.card{border:2px solid var(--c);border-radius:16px;background:radial-gradient(circle,rgba(40,60,170,.85),rgba(10,10,50,.92));display:flex;align-items:center;justify-content:center;padding:8px;font-size:clamp(15px,4vw,27px);box-shadow:0 0 16px var(--c)}
+.card.hover{border-color:var(--y)}.card.locked{border-color:#fff;box-shadow:0 0 30px #fff,0 0 60px var(--y)}
+.card.ok{background:#065f46;border-color:#4ade80}.card.no{background:#7f1d1d;border-color:#f87171}
+#demo{width:min(300px,80vw);height:110px}
+#orbs{position:absolute;inset:0;display:none}
+.orb{position:absolute;width:clamp(58px,12vmin,92px);aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(26px,6vmin,44px);background:radial-gradient(circle,#fff,var(--c));box-shadow:0 0 22px var(--c);transform:translate(-50%,-50%)}
+.orb.g{background:radial-gradient(circle,#fff,var(--y));box-shadow:0 0 22px var(--y)}
+.orb.hover{outline:3px solid var(--y)}.orb.locked{outline:3px solid #fff}
+#boss{display:none;text-align:center}
+.bar{height:14px;border:1px solid var(--c);border-radius:8px;overflow:hidden;background:#0008}.bar i{display:block;height:100%;width:0}
+#bb{background:linear-gradient(90deg,#ef4444,var(--p))}#enf{background:linear-gradient(90deg,var(--c),var(--y))}
+#bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center}
+body.camon #bar{padding-left:calc(var(--pv) + 12px)}
+#en{flex:1;min-width:110px}
+.pw{width:46px;height:46px;border-radius:50%;border:2px solid var(--y);background:#0b1240;color:#fff;font-size:20px;opacity:.4}.pw.rdy{opacity:1;box-shadow:0 0 16px var(--y)}
+#fb{display:none;position:absolute;left:10px;right:10px;top:22%;margin:auto;z-index:6;background:rgba(5,8,30,.95)}
+#ps{display:none;position:absolute;inset:0;z-index:7;background:#000b;align-items:center;justify-content:center;font-size:30px;text-align:center}
+#cam{position:fixed;left:8px;bottom:8px;width:var(--pv);aspect-ratio:4/3;object-fit:cover;transform:scaleX(-1);border:2px solid var(--c);border-radius:10px;z-index:5;display:none;pointer-events:none}
+body.camon #cam{display:block}
+@media(min-width:700px){:root{--pv:130px}}
+#cur{position:fixed;width:34px;height:34px;border:3px solid var(--y);border-radius:50%;pointer-events:none;display:none;transform:translate(-50%,-50%);z-index:9;box-shadow:0 0 12px var(--y)}
+#cur.fist{background:#ef444488;border-color:#ef4444}
+#pop{position:fixed;left:50%;top:32%;translate:-50% -50%;font:900 clamp(24px,8vw,64px) system-ui;text-align:center;text-shadow:0 0 20px var(--c),0 0 40px var(--y);pointer-events:none;z-index:10;opacity:0}
+#pop.s{animation:pp 1.1s}@keyframes pp{0%{opacity:0;scale:.5}20%{opacity:1;scale:1.15}75%{opacity:1}100%{opacity:0;scale:1}}
+.set{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;text-align:left;font-size:14px}
+.set input,.set select,textarea{width:100%;background:#0b1240;color:#fff;border:1px solid var(--c);border-radius:8px;padding:8px;font:inherit}
+textarea{height:170px;font:12px monospace}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:6px;text-align:left}
+#rev div{text-align:left;border-bottom:1px solid #fff3;padding:6px 0;font-size:14px}
+</style></head><body>
+<canvas id="fx"></canvas>
+<div id="app">
+<section id="menu" class="screen on">
+ <h1>⚡ LIGHTNING TEACHER ⚡</h1><h2 style="color:var(--y);letter-spacing:4px">THUNDER LOCK</h2>
+ <div class="md" id="mdm"></div>
+ <div class="col">
+  <button class="btn y" onclick="go('calib')">▶ MULA PERMAINAN</button>
+  <button class="btn" onclick="go('tutorial')">📖 CARA BERMAIN</button>
+  <button class="btn" onclick="openSet()">⚙ TETAPAN (MOD GURU)</button>
+  <button class="btn" onclick="go('credits')">ℹ KREDIT</button>
+  <button class="btn sm fsb" onclick="fs()">⛶ SKRIN PENUH</button>
+ </div>
+</section>
+<section id="tutorial" class="screen">
+ <h2>CARA BERMAIN</h2>
+ <div class="panel" style="text-align:left;line-height:1.5">
+  <p>✋ <b>TARGET LOCK</b> – Halakan tapak tangan ke satu jawapan dan tahan ± 0.5 saat sehingga <b>TARGET LOCKED!</b></p>
+  <p>✊ <b>THUNDER STRIKE</b> – Genggam tangan (penumbuk) untuk melepaskan petir ke sasaran terkunci. Satu serangan bagi setiap soalan.</p>
+  <p>👆 <b>Touch Mode</b> – Ketik jawapan untuk kunci, ketik lagi atau tekan ⚡ SERANG untuk menyerang.</p>
+  <p>⭐ Betul +100 (+bonus combo) · Salah −30 dan −1 nyawa · 3 nyawa · Meter penuh = 1 kuasa khas (⚡ 🔗 🛡️ 🔋).</p>
+  <p>⛈️ Bonus round selepas soalan 5 · 👾 Thunder Guardian selepas soalan terakhir.</p>
+  <p>📷 Kamera hanya diproses dalam pelayar anda. Tiada rakaman dihantar atau disimpan.</p>
+ </div>
+ <button class="btn" onclick="go('menu')">← MENU</button>
+</section>
+<section id="credits" class="screen">
+ <h2>KREDIT</h2>
+ <div class="panel">Dibina sebagai bahan bantu mengajar. Pengesanan tangan: MediaPipe Hands (Google) melalui CDN. Bunyi dan visual dijana oleh Web Audio, CSS dan Canvas.</div>
+ <button class="btn" onclick="go('menu')">← MENU</button>
+</section>
+<section id="calib" class="screen">
+ <h2>KALIBRASI</h2>
+ <div class="cs" id="ccs">Pilih mod: kamera (gesture) atau Touch Mode.</div>
+ <div class="gs"></div>
+ <div class="card" id="demo">🎯 SASARAN UJIAN<br>Kunci → Genggam / Serang</div>
+ <div class="tip"></div>
+ <div class="row">
+  <button class="btn" onclick="startCam()">📷 MULA / CUBA SEMULA</button>
+  <button class="btn sm" onclick="stopCam()">⏹ HENTI KAMERA</button>
+  <button class="btn sm" onclick="flip()">🔄 TUKAR KAMERA</button>
+  <button class="btn" onclick="touchMode()">👆 TOUCH MODE</button>
+ </div>
+ <div class="row"><button class="btn y" id="go" disabled onclick="startGame()">⚡ MULAKAN</button><button class="btn sm" onclick="go('menu')">← MENU</button></div>
+ <div class="md"></div>
+</section>
+<section id="game" class="screen">
+ <div id="hud"><span class="chip">⭐ <b id="sc">0</b></span><span class="chip" id="lv"></span><span class="chip">⏱ <b id="tm"></b></span><span class="chip">🔥 x<b id="cb">0</b></span><span class="chip" id="ph"></span><button class="btn sm" onclick="pause(1)">⏸</button><button class="btn sm fsb" onclick="fs()">⛶</button><button class="btn sm" onclick="quit()">✖</button></div>
+ <div id="boss"><div>👾 THUNDER GUARDIAN</div><div class="bar"><i id="bb" style="width:100%"></i></div></div>
+ <div id="qt" class="panel"></div>
+ <div id="field"><div id="cards"><div class="card"></div><div class="card"></div><div class="card"></div></div><div id="orbs"></div></div>
+ <div class="tip" style="text-align:center"></div>
+ <div id="bar"><div class="bar" id="en"><i id="enf"></i></div>
+  <button class="pw" data-p="strike" title="Thunder Strike +50">⚡</button><button class="pw" data-p="chain" title="Chain Lightning (bonus)">🔗</button><button class="pw" data-p="shield" title="Lightning Shield">🛡️</button><button class="pw" data-p="over" title="Overcharge x2">🔋</button>
+  <button class="btn y sm" onclick="strike()">⚡ SERANG</button></div>
+ <div style="text-align:center"><span class="md"></span> · <span class="gs"></span> · <span id="st" class="tip"></span></div>
+ <div id="fb" class="panel"></div>
+ <div id="ps" onclick="pause(0)">⏸ DIJEDA<br>Ketik untuk sambung</div>
+</section>
+<section id="result" class="screen" style="justify-content:flex-start">
+ <div id="res" class="panel"></div>
+ <div class="row"><button class="btn y" onclick="startGame()">MAIN SEMULA</button><button class="btn" onclick="$('#rev').style.display=$('#rev').style.display=='block'?'none':'block'">LIHAT JAWAPAN</button><button class="btn" id="cp" onclick="copyRes()">SALIN KEPUTUSAN</button><button class="btn" onclick="go('menu')">MENU UTAMA</button></div>
+ <div id="rev" class="panel" style="display:none"></div>
+</section>
+<section id="settings" class="screen" style="justify-content:flex-start">
+ <h2>TETAPAN – MOD GURU</h2>
+ <div class="panel"><div class="set">
+  <label>Subjek<input id="s_sub"></label><label>Topik<input id="s_top"></label>
+  <label>Timer (saat)<input id="s_time" type="number" min="20" max="600"></label><label>Jumlah soalan<input id="s_n" type="number" min="3" max="10"></label>
+  <label>Markah betul<input id="s_ok" type="number"></label><label>Markah salah (tolak)<input id="s_bad" type="number"></label>
+  <label>Masa kunci (ms)<input id="s_lock" type="number" min="200" max="2000" step="50"></label><label>Sensitiviti gesture (1-10)<input id="s_sens" type="number" min="1" max="10"></label>
+  <label>Kesukaran bonus<select id="s_diff"><option value="mudah">Mudah</option><option value="normal">Normal</option><option value="sukar">Sukar</option></select></label>
+  <label>Bunyi<select id="s_snd"><option value="1">Hidup</option><option value="0">Mati</option></select></label>
+ </div>
+ <p class="cs">Soalan (JSON): "soalan" = soalan utama, "bos" = 3 soalan bos. Setiap soalan: q, a (3 pilihan), c (indeks jawapan betul 0-2), e (penerangan).</p>
+ <textarea id="s_json" spellcheck="false"></textarea><div class="tip" id="s_err"></div></div>
+ <div class="row"><button class="btn y" onclick="saveSet()">SIMPAN</button><button class="btn" onclick="go('menu')">← MENU</button></div>
+</section>
+</div>
+<video id="cam" playsinline muted></video><div id="cur"></div><div id="pop"></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],rnd=(a,b)=>a+Math.random()*(b-a),cl=v=>Math.max(0,Math.min(1,v));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ===== DATA GURU – ubah di sini atau melalui TETAPAN =====
+   Setiap soalan: q = soalan, a = 3 pilihan, c = indeks jawapan betul (0,1,2), e = penerangan ringkas */
+let CFG={subject:'Sains Tahun 6',topic:'Elektrik',time:90,ok:100,bad:30,lock:500,sens:5,sound:true,diff:'normal',n:10};
+let QS=[
+{q:'Apakah yang diperlukan supaya arus elektrik mengalir?',a:['Litar lengkap','Litar terbuka','Litar tanpa sel'],c:0,e:'Arus hanya mengalir dalam litar lengkap tanpa sebarang celah.'},
+{q:'Bahan yang membenarkan arus elektrik mengalir ialah…',a:['Penebat','Konduktor','Kayu'],c:1,e:'Konduktor seperti kuprum membenarkan arus mengalir.'},
+{q:'Manakah penebat elektrik?',a:['Kuprum','Besi','Getah'],c:2,e:'Getah tidak membenarkan arus mengalir, jadi ia penebat.'},
+{q:'Apakah fungsi suis dalam litar?',a:['Menambah voltan','Membuka dan menutup litar','Menyimpan arus'],c:1,e:'Suis memutuskan atau menyambung litar.'},
+{q:'Jika bilangan sel kering bertambah, mentol akan menjadi…',a:['Lebih malap','Tidak berubah','Lebih cerah'],c:2,e:'Lebih banyak sel memberi lebih tenaga, mentol lebih cerah.'},
+{q:'Dalam litar selari, satu mentol terbakar. Mentol lain…',a:['Terus menyala','Padam semua','Menjadi malap'],c:0,e:'Setiap mentol mempunyai laluan arus sendiri.'},
+{q:'Dalam litar siri, satu mentol terbakar. Mentol lain…',a:['Terus menyala','Bertambah cerah','Padam'],c:2,e:'Litar siri hanya ada satu laluan; litar terputus.'},
+{q:'Sumber tenaga dalam litar mudah ialah…',a:['Suis','Wayar','Sel kering'],c:2,e:'Sel kering membekalkan tenaga elektrik.'},
+{q:'Tenaga elektrik ditukar kepada tenaga cahaya dalam…',a:['Kipas','Mentol','Loceng'],c:1,e:'Mentol menukar tenaga elektrik kepada cahaya dan haba.'},
+{q:'Peranti keselamatan yang memutuskan litar apabila arus terlalu tinggi?',a:['Fius','Suis','Mentol'],c:0,e:'Fius melebur dan memutuskan litar demi keselamatan.'}];
+let BQ=[
+{q:'Simbol yang mewakili sel dalam rajah litar?',a:['Dua garis berbeza panjang','Bulatan bersilang','Garisan zig-zag'],c:0,e:'Garis panjang ialah terminal positif, garis pendek negatif.'},
+{q:'Bahan manakah konduktor?',a:['Plastik','Kuprum','Kaca'],c:1,e:'Logam seperti kuprum ialah konduktor yang baik.'},
+{q:'Litar terbuka bermaksud…',a:['Arus mengalir laju','Mentol sangat cerah','Arus tidak mengalir'],c:2,e:'Ada celah pada litar, jadi arus tidak mengalir.'}];
+/* ===== STATE ===== */
+const S={screen:'menu',phase:'',camOn:false,ptr:null,hover:null,hoverT:0,locked:null,lockP:0,inputOn:false,paused:false,fbOpen:false,hand:false,noHand:0,ff:0,of:0,armed:false,cool:0,fist:false};
+let G;const MOBILE=matchMedia('(pointer:coarse)').matches;
+function reset(){G={qi:0,bi:0,score:0,lives:3,lost:0,time:CFG.time,streak:0,best:0,ok:0,bad:0,bonus:0,energy:0,shield:false,over:0,boost:false,chain:false,a3:false,a5:false,log:[],bossHp:100,bossWon:false,bt:0,bhit:0,bstr:0,spawn:0,bdone:false,answered:false,dead:false,list:QS.slice(0,Math.min(CFG.n,QS.length))}}
+reset();
+const later=(f,ms)=>{const g=G;return setTimeout(()=>{if(g===G&&S.screen==='game')f()},ms)};
+function say(t){$$('.tip').forEach(e=>{if(!e.id)e.textContent=t});}
+function pop(t){const p=$('#pop');p.textContent=t;p.classList.remove('s');void p.offsetWidth;p.classList.add('s')}
+const ctr=e=>{const r=e.getBoundingClientRect();return[r.left+r.width/2,r.top+r.height/2]};
+/* ===== AUDIO (Web Audio, bermula selepas interaksi) ===== */
+let AC;function au(){if(!CFG.sound)return null;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();return AC}catch(e){return null}}
+function tone(f,d,t='sine',v=.12,to=f,dl=0){const a=au();if(!a)return;const o=a.createOscillator(),g=a.createGain(),s=a.currentTime+dl;o.type=t;o.frequency.setValueAtTime(f,s);o.frequency.exponentialRampToValueAtTime(Math.max(30,to),s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+d)}
+function zap(d=.4){const a=au();if(!a)return;const n=a.sampleRate*d|0,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=(Math.random()*2-1)*(1-i/n);const s=a.createBufferSource(),g=a.createGain();g.gain.value=.22;s.buffer=b;s.connect(g);g.connect(a.destination);s.start()}
+const seq=(fs,t='triangle')=>fs.forEach((f,i)=>tone(f,.18,t,.14,f,i*.09));
+const SFX={lock:()=>tone(500,.15,'square',.07,1200),charge:()=>tone(200,.5,'sawtooth',.07,900),strike:()=>{zap();tone(1400,.3,'sawtooth',.09,60)},ok:()=>seq([523,659,784]),bad:()=>tone(220,.45,'sawtooth',.13,60),combo:()=>seq([659,880,1175],'square'),power:()=>seq([400,600,900,1300],'sawtooth'),bonus:()=>seq([300,450,300,450,600],'square'),win:()=>seq([523,659,784,1047,1319]),lose:()=>seq([392,330,262,196],'sawtooth')};
+/* ===== EFEK VISUAL (Canvas) ===== */
+const cv=$('#fx'),cx=cv.getContext('2d'),app=$('#app');let W,H,bolts=[],parts=[],flash=0,shake=0,amb=2;
+function rs(){const d=Math.min(devicePixelRatio||1,1.5);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,250));rs();
+const clouds=Array.from({length:7},()=>({x:Math.random()*1.3,y:Math.random()*.5,r:rnd(.15,.3),s:rnd(.004,.012)}));
+function bolt(x1,y1,x2,y2,col,life=.4){const pts=[[x1,y1]],n=11;for(let i=1;i<n;i++){const t=i/n;pts.push([x1+(x2-x1)*t+rnd(-40,40)*(1-Math.abs(t-.5)),y1+(y2-y1)*t+rnd(-30,30)])}pts.push([x2,y2]);bolts.push({pts,life,col})}
+function burst(x,y,col,n=40){for(let i=0;i<n;i++){const a=rnd(0,6.28),s=rnd(80,380);parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,l:rnd(.4,.9),col})}}
+function draw(dt){
+ const storm=S.phase==='bonus',g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,storm?'#1a0838':'#0a0f3a');g.addColorStop(1,'#1a0b40');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ clouds.forEach(c=>{c.x=(c.x+c.s*dt*(storm?3:1))%1.4;const x=(c.x-.2)*W,y=c.y*H,r=c.r*Math.max(W,H),rg=cx.createRadialGradient(x,y,0,x,y,r);rg.addColorStop(0,storm?'rgba(168,85,247,.38)':'rgba(70,90,200,.3)');rg.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=rg;cx.fillRect(x-r,y-r,2*r,2*r)});
+ if((amb-=dt)<=0){amb=rnd(storm?.7:3,storm?1.8:7);bolt(rnd(0,W),0,rnd(0,W),rnd(H*.2,H*.5),'120,150,255',.25);flash=Math.max(flash,.06)}
+ bolts=bolts.filter(b=>(b.life-=dt)>0);cx.lineJoin='round';
+ bolts.forEach(b=>{const al=Math.min(1,b.life*4);cx.shadowBlur=18;cx.shadowColor='rgb('+b.col+')';[[7,.45],[2.5,1]].forEach(([w,a],i)=>{cx.strokeStyle=i?'rgba(255,255,255,'+al+')':'rgba('+b.col+','+al*a+')';cx.lineWidth=w;cx.beginPath();b.pts.forEach((p,j)=>j?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke()})});cx.shadowBlur=0;
+ parts=parts.filter(p=>(p.l-=dt)>0);parts.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;cx.fillStyle='rgba('+p.col+','+Math.min(1,p.l*2)+')';cx.fillRect(p.x,p.y,3,3)});
+ const h=S.hover;if(h&&h.isConnected&&S.lockP>0&&h!==S.locked){const[x,y]=ctr(h);cx.strokeStyle='#facc15';cx.lineWidth=3;cx.beginPath();cx.arc(x,y,70*(1-S.lockP)+22,0,6.3);cx.stroke()}
+ const l=S.locked;if(l&&l.isConnected){const[x,y]=ctr(l);cx.strokeStyle='#fff';cx.lineWidth=3;cx.beginPath();cx.arc(x,y,24,0,6.3);cx.moveTo(x-38,y);cx.lineTo(x+38,y);cx.moveTo(x,y-38);cx.lineTo(x,y+38);cx.stroke()}
+ if(flash>0){cx.fillStyle='rgba(255,255,255,'+flash+')';cx.fillRect(0,0,W,H);flash-=dt*1.6}
+ shake=Math.max(0,shake-dt*30);app.style.transform=shake>.5?`translate(${rnd(-shake,shake)}px,${rnd(-shake,shake)}px)`:'';
+}
+/* ===== ENJIN SASARAN ===== */
+function targets(){if(S.screen==='calib')return[$('#demo')];if(S.screen!=='game')return[];return S.phase==='bonus'?$$('.orb'):$$('#cards .card')}
+const inR=(e,x,y)=>{const r=e.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom};
+function lockOn(e){S.locked=e;S.lockP=0;$$('.card,.orb').forEach(x=>x.classList.toggle('locked',x===e));SFX.lock();pop('TARGET LOCKED!')}
+function lockStep(dt){
+ const ts=targets(),p=S.ptr;let h=p?ts.find(e=>inR(e,p[0],p[1]))||null:null;
+ if(h!==S.hover){S.hover=h;S.hoverT=0;S.lockP=0}
+ ts.forEach(e=>e.classList.toggle('hover',e===S.hover&&e!==S.locked));
+ if(h&&h!==S.locked){S.hoverT+=dt;S.lockP=Math.min(1,S.hoverT/(CFG.lock/1000));if(S.lockP>=1)lockOn(h)}
+}
+function strike(){
+ if(!S.inputOn||S.paused)return;
+ if(!S.locked||!S.locked.isConnected){say('Kunci sasaran dahulu! Halakan tapak tangan ke jawapan.');return}
+ const el=S.locked;S.locked=null;el.classList.remove('locked','hover');
+ const[x,y]=ctr(el),o=S.camOn&&S.ptr?S.ptr:[W/2,H];
+ bolt(o[0],o[1],x,y,'34,211,238',.45);if(G.boost&&S.screen==='game')bolt(o[0]+20,o[1],x,y,'250,204,21',.45);
+ flash=.5;shake=10;SFX.strike();pop('THUNDER STRIKE!');
+ if(S.screen==='calib'){burst(x,y,'250,204,21',50);say('Kalibrasi berjaya ✔ Anda boleh mulakan permainan.');$('#go').disabled=false;return}
+ if(S.phase==='bonus')return collect(el,x,y);
+ S.inputOn=false;later(()=>answer(+el.dataset.i,el),500);
+}
+/* ===== PERMAINAN ===== */
+function go(id){S.screen=id;$$('.screen').forEach(s=>s.classList.toggle('on',s.id===id));S.hover=S.locked=null;S.inputOn=id==='calib';S.paused=false;$('#ps').style.display='none';if(id==='menu')stopCam();$$('.tip').forEach(e=>e.textContent='')}
+function startGame(){reset();S.phase='main';S.fbOpen=false;go('game');document.body.classList.remove('storm');$('#boss').style.display='none';$('#fb').style.display='none';$('#orbs').innerHTML='';renderQ();SFX.charge();pop('SEDIA!')}
+function renderQ(){
+ const boss=S.phase==='boss',q=boss?BQ[G.bi]:G.list[G.qi];
+ $('#qt').textContent=q.q;$('#cards').style.display='grid';$('#orbs').style.display='none';
+ $$('#cards .card').forEach((c,i)=>{c.dataset.i=i;c.textContent=q.a[i];c.className='card'});
+ G.answered=false;S.locked=null;S.inputOn=true;
+ $('#ph').textContent=boss?'👾 Bos '+(G.bi+1)+'/'+BQ.length:'Soalan '+(G.qi+1)+'/'+G.list.length;
+}
+function answer(i,el){
+ if(G.answered||S.screen!=='game')return;G.answered=true;
+ const boss=S.phase==='boss',q=boss?BQ[G.bi]:G.list[G.qi],ok=i===q.c,cs=$$('#cards .card'),[x,y]=ctr(el);let ex='';
+ cs[q.c].classList.add('ok');
+ if(ok){el.classList.add('ok');burst(x,y,'250,204,21',60);burst(x,y,'34,211,238',30);SFX.ok()}else{el.classList.add('no');burst(x,y,'239,68,68',50);burst(x,y,'168,85,247',25);shake=16;SFX.bad()}
+ if(boss){if(ok){G.bossHp=Math.max(0,G.bossHp-34);shake=14;ex='Thunder Guardian terkena serangan!'}else ex='Baca penerangan ini untuk ingat jawapan.';if(G.bi===BQ.length-1)G.bossWon=G.bossHp<=0}
+ else{
+  G.log.push({q:q.q,my:q.a[i],right:q.a[q.c],e:q.e,ok});
+  if(ok){G.ok++;G.streak++;G.best=Math.max(G.best,G.streak);if(G.streak>=3)G.a3=true;if(G.streak>=5)G.a5=true;
+   let p=CFG.ok+20*(G.streak-1)+(G.boost?50:0);G.boost=false;if(G.over>0)p*=2;G.score+=p;G.energy=Math.min(100,G.energy+34);ex='+'+p+' mata';
+   pop(G.streak>=7?'POWER OVERLOAD!':G.streak>=5?'SUPER STRIKE!':G.streak>=2?'THUNDER COMBO x'+G.streak:'PERFECT LOCK!');if(G.streak>1)SFX.combo()}
+  else{G.bad++;G.streak=0;if(G.shield){G.shield=false;ex='🛡️ Perisai melindungi anda!'}else{G.score=Math.max(0,G.score-CFG.bad);G.lives--;G.lost++;ex='−'+CFG.bad+' mata, −1 nyawa';if(G.lives<=0)G.dead=true}}
+ }
+ later(()=>showFb(ok,q,ex),900);
+}
+function showFb(ok,q,ex){
+ const f=$('#fb');f.innerHTML=`<h2 style="color:${ok?'#4ade80':'#f87171'}">${ok?'✔ BETUL!':'✘ SALAH!'}</h2><p>Jawapan betul: <b>${esc(q.a[q.c])}</b></p><p>${esc(q.e||'')}</p><p>${ex}</p><button class="btn y" id="fbn">SETERUSNYA ▶</button>`;
+ f.style.display='block';S.fbOpen=true;S.inputOn=false;$('#fbn').onclick=nextStep;G.fbT=later(nextStep,4500);
+}
+function nextStep(){
+ clearTimeout(G.fbT);if(!S.fbOpen)return;$('#fb').style.display='none';S.fbOpen=false;
+ if(S.phase==='boss'){G.bi++;if(G.bi>=BQ.length)endGame('boss');else renderQ();return}
+ if(G.dead)return endGame('lives');
+ G.qi++;
+ if(G.qi===5&&G.list.length>5&&!G.bdone)return startBonus();
+ if(G.qi>=G.list.length){if(G.time>0&&G.lives>0&&BQ.length)startBoss();else endGame('done');return}
+ renderQ();
+}
+function startBonus(){S.phase='bonus';G.bt=15;G.bhit=0;G.bstr=0;G.spawn=0;S.locked=null;S.inputOn=true;
+ $('#cards').style.display='none';const o=$('#orbs');o.innerHTML='';o.style.display='block';$('#qt').textContent='⛈️ STORM SURGE! Kunci orb tenaga dan sambar!';SFX.bonus();pop('STORM SURGE!')}
+function spawnOrb(){const e=document.createElement('div'),g=Math.random()<.2;e.className='orb'+(g?' g':'');e.textContent=g?'🌟':'⚡';e.style.left=rnd(10,90)+'%';e.style.top=rnd(14,86)+'%';e._l={mudah:4,normal:3,sukar:2}[CFG.diff]||3;$('#orbs').appendChild(e)}
+function addB(p){if(G.over>0)p*=2;G.score+=p;G.bonus+=p}
+function collect(el,x,y){
+ let hit=[el];if(G.chain){G.chain=false;hit=hit.concat($$('.orb').filter(e=>e!==el).slice(0,2))}
+ hit.forEach(e=>{const[a,b]=ctr(e);if(e!==el)bolt(x,y,a,b,'250,204,21',.45);burst(a,b,e.classList.contains('g')?'250,204,21':'34,211,238',30);G.bhit++;G.bstr++;let p=e.classList.contains('g')?100:50;if(G.bstr%5===0){p+=100;pop('THUNDER COMBO x5!');SFX.combo()}addB(p);e.remove()});
+}
+function endBonus(){G.bdone=true;S.phase='main';S.locked=null;S.inputOn=false;S.fbOpen=true;$('#orbs').innerHTML='';pop('BONUS +'+G.bonus);SFX.win();later(()=>{S.fbOpen=false;renderQ()},2000)}
+function startBoss(){S.phase='boss';G.bi=0;G.bossHp=100;$('#boss').style.display='block';renderQ();SFX.bonus();pop('THUNDER GUARDIAN!')}
+function pause(v){if(S.screen!=='game')return;S.paused=!!v;$('#ps').style.display=v?'flex':'none'}
+function quit(){if(confirm('Keluar ke menu?'))go('menu')}
+addEventListener('visibilitychange',()=>{if(document.hidden)pause(1)});
+$$('.pw').forEach(b=>b.onclick=()=>{if(S.screen!=='game'||G.energy<100||S.paused||G.fbOpen)return;const p=b.dataset.p;
+ if(p==='chain'&&S.phase!=='bonus'){say('Chain Lightning hanya untuk bonus round');return}
+ G.energy=0;SFX.power();if(p==='strike')G.boost=true;if(p==='chain')G.chain=true;if(p==='shield')G.shield=true;if(p==='over')G.over=10;
+ pop({strike:'THUNDER STRIKE SIAP!',chain:'CHAIN LIGHTNING!',shield:'LIGHTNING SHIELD!',over:'OVERCHARGE x2!'}[p])});
+function hud(){
+ $('#sc').textContent=G.score;$('#lv').textContent='❤️'.repeat(G.lives)+'🖤'.repeat(3-G.lives);$('#tm').textContent=S.phase==='bonus'?'⛈ '+Math.ceil(G.bt)+'s':Math.ceil(G.time)+'s';$('#cb').textContent=G.streak;
+ $('#enf').style.width=G.energy+'%';$$('.pw').forEach(b=>b.classList.toggle('rdy',G.energy>=100));$('#bb').style.width=G.bossHp+'%';
+ if(S.phase==='bonus')$('#ph').textContent='BONUS · '+G.bhit+' sasaran · +'+G.bonus;
+ $('#st').textContent=[G.boost?'⚡ Strike+':'',G.chain?'🔗 Chain':'',G.shield?'🛡️ Perisai':'',G.over>0?'🔋x2 '+Math.ceil(G.over)+'s':''].filter(Boolean).join(' ');
+}
+function update(dt){
+ const cur=$('#cur');if(S.camOn&&S.ptr){cur.style.display='block';cur.style.left=S.ptr[0]+'px';cur.style.top=S.ptr[1]+'px';cur.classList.toggle('fist',S.fist)}else cur.style.display='none';
+ $$('.md').forEach(e=>e.textContent=S.camOn?(S.hand?'🖐️ Mod Gesture – tangan dikesan':'🖐️ Mod Gesture – mencari tangan…'):'👆 Touch Mode');
+ if(S.paused)return;
+ if(S.inputOn){if(S.locked&&!S.locked.isConnected)S.locked=null;lockStep(dt)}
+ if(S.screen==='game'){
+  if(S.phase==='main'&&!S.fbOpen){G.time-=dt;if(G.time<=0){G.time=0;return endGame('time')}}
+  if(G.over>0)G.over-=dt;
+  if(S.phase==='bonus'){G.bt-=dt;G.spawn-=dt;if(G.spawn<=0&&$$('.orb').length<5){spawnOrb();G.spawn={mudah:.9,normal:.7,sukar:.5}[CFG.diff]||.7}
+   $$('.orb').forEach(e=>{if((e._l-=dt)<=0){e.remove();G.bstr=0}});if(G.bt<=0)endBonus()}
+  hud();
+ }
+}
+let last=performance.now();(function loop(t){const dt=Math.min(.05,(t-last)/1000);last=t;update(dt);draw(dt);requestAnimationFrame(loop)})(last);
+/* ===== INPUT SENTUHAN / TETIKUS ===== */
+addEventListener('pointerdown',e=>{au();if(e.target.closest('button,input,select,textarea,label,#ps'))return;if(!S.inputOn||S.paused)return;
+ const t=targets().find(el=>inR(el,e.clientX,e.clientY));if(!t)return;if(S.locked===t)strike();else lockOn(t)});
+addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&!S.camOn)S.ptr=[e.clientX,e.clientY]});
+/* ===== KAMERA + MEDIAPIPE ===== */
+const HU='https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/';let hands,stream,loopOn=false,face='user',busy=false,lastSend=0;const vid=$('#cam');
+function cstat(t,bad){$$('.cs,.gs').forEach(e=>{if(e.id==='ccs'||e.classList.contains('gs')){e.textContent=t;e.style.color=bad?'#f87171':'#a5f3fc'}})}
+function loadLib(){return new Promise((res,rej)=>{if(window.Hands)return res();const s=document.createElement('script');s.src=HU+'hands.js';s.crossOrigin='anonymous';s.onload=res;s.onerror=()=>rej();document.head.appendChild(s)})}
+async function startCam(){
+ if(S.camOn)return;
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!isSecureContext){cstat('Kamera tidak tersedia: gunakan HTTPS atau localhost. Anda boleh guna Touch Mode.',1);return}
+ au();cstat('Memuatkan model…');
+ try{await loadLib();if(!hands){hands=new Hands({locateFile:f=>HU+f});hands.setOptions({maxNumHands:1,modelComplexity:MOBILE?0:1,minDetectionConfidence:.6,minTrackingConfidence:.5});hands.onResults(onHands);await hands.initialize()}}
+ catch(e){cstat('Gagal memuatkan MediaPipe (CDN). Semak internet, kemudian tekan CUBA SEMULA atau guna Touch Mode.',1);return}
+ try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:face},width:{ideal:MOBILE?480:640},height:{ideal:MOBILE?360:480}},audio:false});
+  vid.srcObject=stream;await vid.play();for(let i=0;i<60&&!(vid.videoWidth&&vid.readyState>=2);i++)await new Promise(r=>setTimeout(r,50));
+  if(!vid.videoWidth)throw{name:'NoVideo'}}
+ catch(e){stopCam();cstat(e.name==='NotAllowedError'?'Kebenaran kamera ditolak. Benarkan kamera pada tetapan pelayar, kemudian cuba semula.':'Kamera tidak tersedia ('+(e.name||'ralat')+'). Guna Touch Mode.',1);return}
+ S.camOn=true;document.body.classList.add('camon');S.armed=false;cstat('Kamera aktif – tunjukkan tangan');loopOn=true;pump();
+}
+async function pump(){if(!loopOn)return;const n=performance.now();if(!busy&&vid.readyState>=2&&n-lastSend>(MOBILE?70:33)){busy=true;lastSend=n;try{await hands.send({image:vid})}catch(e){}busy=false}requestAnimationFrame(pump)}
+function stopCam(){loopOn=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;vid.srcObject=null;if(S.camOn)cstat('Kamera dihentikan');S.camOn=false;S.hand=false;S.ptr=null;document.body.classList.remove('camon')}
+function flip(){face=face==='user'?'environment':'user';if(S.camOn){stopCam();startCam()}}
+function touchMode(){stopCam();cstat('Touch Mode dipilih. Ketik sasaran ujian untuk kunci, ketik lagi untuk serang.');$('#go').disabled=false}
+function onHands(r){
+ if(!S.camOn)return;const L=r.multiHandLandmarks&&r.multiHandLandmarks[0];
+ if(!L){if(++S.noHand>8){S.hand=false;S.ptr=null;cstat('Kamera aktif – tiada tangan dikesan')}return}
+ S.noHand=0;S.hand=true;const w=L[0],m=L[9],d=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);let c=0;
+ [[8,6],[12,10],[16,14],[20,18]].forEach(([t,p])=>{if(d(L[t],w)<d(L[p],w))c++});
+ const fist=c>=3;S.fist=fist;
+ if(!fist||!S.ptr){const tx=cl((1-m.x-.15)/.7)*W,ty=cl((m.y-.15)/.7)*H,a=.12+.05*CFG.sens;S.ptr=S.ptr?[S.ptr[0]+(tx-S.ptr[0])*a,S.ptr[1]+(ty-S.ptr[1])*a]:[tx,ty]} /* cermin x; kawasan tengah kamera dipetakan ke seluruh skrin */
+ if(fist){S.ff++;S.of=0}else{S.of++;S.ff=0}
+ const need=Math.max(2,Math.round(5-CFG.sens/3));if(S.of>need)S.armed=true;
+ if(fist&&S.ff>=need&&S.armed&&performance.now()>S.cool){S.armed=false;S.cool=performance.now()+700;strike()}
+ cstat(fist?'Tangan dikesan – penumbuk ✊':'Tangan dikesan – terbuka ✋');
+}
+/* ===== KEPUTUSAN ===== */
+function endGame(reason){
+ if(S.screen==='result')return;clearTimeout(G.fbT);const ph=S.phase;S.phase='';S.inputOn=false;S.fbOpen=false;
+ const fin=reason==='boss'||reason==='done',ans=G.ok+G.bad,acc=ans?Math.round(G.ok/ans*100):0,used=Math.round(CFG.time-G.time);
+ const rank=acc>=80&&G.bossWon?'THUNDER MASTER':acc>=80?'THUNDER EXPERT':acc>=50?'STORM APPRENTICE':'ROOKIE';
+ const ach=[[G.a3,'3 jawapan betul berturut-turut'],[G.a5,'5 jawapan betul berturut-turut'],[fin,'Menyelesaikan semua soalan'],[fin&&G.lost===0,'Tamat tanpa kehilangan nyawa']].filter(a=>a[0]).map(a=>'🏅 '+a[1]);
+ const title=G.bossWon?'⚡ THUNDER MASTER ⚡':reason==='lives'?'Nyawa habis':reason==='time'?'Masa tamat':ph==='boss'||reason==='boss'?'Thunder Guardian masih berdiri':'Permainan tamat';
+ G.txt=`LIGHTNING TEACHER – ${CFG.subject}: ${CFG.topic}\nPangkat: ${rank}\nSkor: ${G.score} | Betul: ${G.ok} | Salah: ${G.bad} | Ketepatan: ${acc}%\nCombo terbaik: ${G.best} | Bonus: ${G.bonus} | Masa: ${used}s`;
+ $('#res').innerHTML=`<h2>${title}</h2><h1 style="font-size:clamp(22px,6vw,44px)">${rank}</h1><div class="g2"><span>⭐ Skor</span><b>${G.score}</b><span>✔ Betul</span><b>${G.ok}</b><span>✘ Salah</span><b>${G.bad}</b><span>🎯 Ketepatan</span><b>${acc}%</b><span>🔥 Combo terbaik</span><b>${G.best}</b><span>⏱ Masa digunakan</span><b>${used}s</b><span>⛈ Markah bonus</span><b>${G.bonus}</b><span>👾 Bos</span><b>${G.bossWon?'Dikalahkan':'—'}</b></div><p>${ach.length?ach.join('<br>'):'Tiada achievement lagi'}</p>`;
+ $('#rev').innerHTML=G.log.map((l,i)=>`<div>${i+1}. ${esc(l.q)}<br>Jawapan anda: <b style="color:${l.ok?'#4ade80':'#f87171'}">${esc(l.my)}</b> · Betul: <b>${esc(l.right)}</b><br><i>${esc(l.e||'')}</i></div>`).join('')||'Tiada jawapan.';
+ $('#rev').style.display='none';$('#cp').textContent='SALIN KEPUTUSAN';go('result');(rank==='ROOKIE'||reason==='lives'||reason==='time')?SFX.lose():SFX.win();
+}
+function copyRes(){const t=G.txt,b=$('#cp');(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).catch(()=>{const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(e){}a.remove()});b.textContent='DISALIN ✔'}
+/* ===== TETAPAN GURU ===== */
+function openSet(){const m={s_sub:'subject',s_top:'topic',s_time:'time',s_n:'n',s_ok:'ok',s_bad:'bad',s_lock:'lock',s_sens:'sens',s_diff:'diff'};for(const k in m)$('#'+k).value=CFG[m[k]];$('#s_snd').value=CFG.sound?'1':'0';$('#s_json').value=JSON.stringify({soalan:QS,bos:BQ},null,1);$('#s_err').textContent='';go('settings')}
+function saveSet(){
+ try{const j=JSON.parse($('#s_json').value),ok=a=>Array.isArray(a)&&a.length>0&&a.every(q=>q.q&&Array.isArray(q.a)&&q.a.length===3&&[0,1,2].includes(q.c));
+  if(!ok(j.soalan)||!ok(j.bos))throw'Setiap soalan perlu q, 3 pilihan dalam a, dan c antara 0–2.';
+  const m={s_sub:'subject',s_top:'topic'},n={s_time:'time',s_n:'n',s_ok:'ok',s_bad:'bad',s_lock:'lock',s_sens:'sens'};
+  for(const k in m)CFG[m[k]]=$('#'+k).value;for(const k in n)CFG[n[k]]=+$('#'+k).value||CFG[n[k]];
+  CFG.n=Math.max(3,Math.min(10,CFG.n,j.soalan.length));CFG.diff=$('#s_diff').value;CFG.sound=$('#s_snd').value==='1';QS=j.soalan;BQ=j.bos;go('menu')
+ }catch(e){$('#s_err').textContent='Ralat: '+(e.message||e)}
+}
+function fs(){const d=document,e=d.documentElement,f=e.requestFullscreen||e.webkitRequestFullscreen;if(d.fullscreenElement||d.webkitFullscreenElement)(d.exitFullscreen||d.webkitExitFullscreen).call(d);else if(f)f.call(e)}
+if(!document.documentElement.requestFullscreen&&!document.documentElement.webkitRequestFullscreen)$$('.fsb').forEach(b=>b.style.display='none');
+addEventListener('beforeunload',stopCam);
+</script></body></html>
